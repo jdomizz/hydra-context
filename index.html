@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>hydra-context</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍯</text></svg>"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        box-sizing: border-box;
+        font-family: monospace;
+        background-color: #363636;
+      }
+
+      #toolbar {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      #toolbar h1 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: normal;
+        color: #d9d9d9;
+      }
+
+      #toolbar .controls {
+        color: #d9d9d9;
+        font-size: 0.8rem;
+      }
+
+      #grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+
+      .stage {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        overflow: hidden;
+        border-radius: 1rem;
+        background-color: #000;
+      }
+
+      .stage canvas {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        display: block;
+      }
+
+      .stage .controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        color: #d9d9d9;
+        font-size: 0.85rem;
+      }
+
+      input[type='range'] {
+        flex: 1;
+      }
+
+      output {
+        min-width: 2.5rem;
+        color: #8a8a8a;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="toolbar">
+      <h1>hydra-context</h1>
+      <div class="controls"><span id="status"></span></div>
+    </header>
+
+    <main id="grid">
+      <section class="stage">
+        <canvas id="canvas-a" width="480" height="360"></canvas>
+        <div class="controls">
+          <label for="scale-a">scale</label>
+          <input id="scale-a" type="range" min="0" max="100" value="20" />
+          <output id="scale-a-value">20</output>
+          <label class="toggle"><input id="animate-a" type="checkbox" checked /> animate</label>
+        </div>
+      </section>
+
+      <section class="stage">
+        <canvas id="canvas-b" width="480" height="360"></canvas>
+        <div class="controls">
+          <label for="scale-b">scale</label>
+          <input id="scale-b" type="range" min="0" max="100" value="70" />
+          <output id="scale-b-value">70</output>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { HydraContext } from 'hydra-context'
+      import Hydra from 'hydra-synth'
+
+      const WATCH = ['osc', 'mouse', 'time', 'update', 's0', 'hydraSynth', '_hydra']
+
+      /** Wraps a canvas in an isolated hydra-synth instance and context. */
+      function mount(selector) {
+        const canvas = document.querySelector(selector)
+        const hydra = new Hydra({ canvas, makeGlobal: false, detectAudio: false })
+        const ctx = new HydraContext(hydra)
+        return { canvas, hydra, ctx }
+      }
+
+      /** A minimal per-canvas pointer, shaped like the editor's `mouse` object. */
+      function trackPointer(canvas) {
+        const mouse = { x: 0.5, y: 0.5, deltaX: 0, deltaY: 0, button: 0 }
+        let last = { x: 0.5, y: 0.5 }
+        const rect = () => canvas.getBoundingClientRect()
+        canvas.addEventListener('pointermove', event => {
+          const r = rect()
+          mouse.x = (event.clientX - r.left) / r.width
+          mouse.y = 1 - (event.clientY - r.top) / r.height
+          mouse.deltaX = mouse.x - last.x
+          mouse.deltaY = mouse.y - last.y
+          last = { x: mouse.x, y: mouse.y }
+        })
+        canvas.addEventListener('pointerdown', () => (mouse.button = 1))
+        canvas.addEventListener('pointerup', () => (mouse.button = 0))
+        return mouse
+      }
+
+      /**
+       * Binds a scale slider as a two-way live value: the slider drives the sketch,
+       * and a sketch assignment (`scale = …`) writes back into the slider + readout.
+       */
+      function bindScaleSlider(context, input, output) {
+        context.bindLive(
+          'scale',
+          () => Number(input.value) / 100,
+          value => {
+            input.value = Math.round(value * 100)
+            output.textContent = input.value
+          }
+        )
+        input.addEventListener('input', () => (output.textContent = input.value))
+      }
+
+      /**
+       * Host-owned extension loader: fetch + eval under the temporary bridge, so
+       * the extension sees `_hydra`/`hydraSynth`/`synth` while it registers.
+       */
+      function bindLoadScript(context) {
+        context.bind('loadScript', async url => {
+          await context.withBridge(async () => {
+            const res = await fetch(url)
+            if (!res.ok) return
+            await context.eval(await res.text())
+          })
+        })
+      }
+
+      const a = mount('#canvas-a')
+      const b = mount('#canvas-b')
+      const scaleA = document.querySelector('#scale-a')
+      const scaleB = document.querySelector('#scale-b')
+      const valueA = document.querySelector('#scale-a-value')
+      const valueB = document.querySelector('#scale-b-value')
+      const animateA = document.querySelector('#animate-a')
+      const pointerA = trackPointer(a.canvas)
+      const pointerB = trackPointer(b.canvas)
+
+      bindScaleSlider(a.ctx, scaleA, valueA)
+      bindScaleSlider(b.ctx, scaleB, valueB)
+      a.ctx.bindLive('mouse', () => pointerA)
+      b.ctx.bindLive('mouse', () => pointerB)
+      a.ctx.bindLive('animate', () => animateA.checked)
+      bindLoadScript(a.ctx)
+
+      await a.ctx.eval(`
+        await loadScript('https://cdn.statically.io/gl/metagrowing/extra-shaders-for-hydra@main/lib/lib-pattern.js')
+        update = () => { if (animate) { scale = (Math.sin(time * 0.3) + 1) / 2 } }
+        spiral(() => scale * 3, 5, 0.3)
+          .diff(concentric(() => scale * 120))
+          .rotate(() => (mouse.x - 0.5) * 2)
+          .out()
+      `)
+      await b.ctx.eval('noise(() => scale * 4).modulate(osc(() => mouse.x * 8, 0.2)).out()')
+
+      const statusEl = document.querySelector('#status')
+      setInterval(() => {
+        statusEl.textContent = WATCH.map(
+          name => `${name}: ${globalThis[name] === undefined ? 'undefined' : 'POLLUTED'}`
+        ).join(' · ')
+      }, 500)
+    </script>
+  </body>
+</html>
