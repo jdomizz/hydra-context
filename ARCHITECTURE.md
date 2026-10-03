@@ -120,12 +120,15 @@ runtime.
 
 ## Build and verification
 
-Vite builds a single ES module, `dist/hydra-context.js`, from `index.js`; the
-published package ships the `src` files themselves. The full local gate is:
+The published package ships the `tsc`-compiled `dist/` — each source module is
+emitted as `dist/<module>.js` next to its `dist/<module>.d.ts`, with
+`dist/index.js`/`dist/index.d.ts` as the entry. The full local gate is:
 
 ```sh
 pnpm check
 ```
 
-lint + format check + the Vitest suite + the build. CI runs it on every push
-and pull request.
+lint + format check + the Vitest suite + the `tsc` build + the package
+publishing linters (`publint`, `arethetypeswrong`). CI runs it on every push
+and pull request. The demo (`index.html`) runs against `src` via the Vite dev
+server (`pnpm dev`) and needs no build.

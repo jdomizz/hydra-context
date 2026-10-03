@@ -32,8 +32,10 @@ watch on the editor globals staying `undefined`.
 | `pnpm lint`         | Lint with oxlint.                                      |
 | `pnpm format`       | Format with oxfmt.                                     |
 | `pnpm format:check` | Check formatting without writing.                      |
-| `pnpm build`        | Bundle `dist/hydra-context.js`.                        |
-| `pnpm check`        | `lint` + `format:check` + `test` + `build` — the gate. |
+| `pnpm build`        | Compile `src/` to `dist/` — `.js` + `.d.ts` (tsc).    |
+| `pnpm publint`      | Lint the published package surface.                    |
+| `pnpm attw`         | Check type resolution of the packed package.           |
+| `pnpm check`        | `lint` + `format:check` + `test` + `build` + `publint` + `attw` — the gate. |
 
 Run the full gate before proposing a change.
 
