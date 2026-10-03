@@ -51,13 +51,17 @@
     "lint": "oxlint .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "check": "pnpm lint && pnpm format:check && pnpm test && pnpm clean && pnpm build"
+    "publint": "publint",
+    "attw": "attw --pack . --profile esm-only",
+    "check": "pnpm lint && pnpm format:check && pnpm test && pnpm clean && pnpm build && pnpm publint && pnpm attw"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "hydra-synth": "^1.4.0",
     "oxc-standard": "^1.4.0",
     "oxfmt": "^0.48.0",
     "oxlint": "^1.85.0",
+    "publint": "^0.3.25",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
