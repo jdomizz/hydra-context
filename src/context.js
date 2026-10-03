@@ -5,7 +5,9 @@ import { bindLiveScope, bindScope, unbindScope } from './scope.js'
 
 /** A persistent, headless eval context for a hydra-synth instance. */
 export class HydraContext {
+  /** @type {Object|undefined} */
   #hydra
+  /** @type {Object|undefined} */
   #synth
   #scope
   #unresolved
@@ -16,7 +18,7 @@ export class HydraContext {
    * @param {Object} [options]
    * @param {Object} [options.scope] Persistent scope object.
    * @param {'warn'|'error'|'silent'|Function} [options.unresolved='warn'] Policy for identifiers missing from scope, synth, and globals.
-   * @param {Object} [options.bridge] Serialized bridge coordinator.
+   * @param {import('./bridge.js').Bridge} [options.bridge] Serialized bridge coordinator.
    * */
   constructor(hydra, options = {}) {
     this.#scope = options.scope ?? Object.create(null)
@@ -51,7 +53,7 @@ export class HydraContext {
 
   /**
    * Attaches or replaces the engine; keeps scope and bindings.
-   * @param {Object} hydra
+   * @param {any} hydra
    * @returns {HydraContext}
    * */
   attach(hydra) {
@@ -98,8 +100,8 @@ export class HydraContext {
   /**
    * Binds a live getter, re-read on every access; an optional `sink(value)` makes it two-way.
    * @param {string} name
-   * @param {Function} provider
-   * @param {Function} [sink]
+   * @param {() => any} provider
+   * @param {(value: unknown) => void} [sink]
    * @returns {HydraContext}
    * */
   bindLive(name, provider, sink) {

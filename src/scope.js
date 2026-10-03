@@ -6,14 +6,22 @@ const liveNames = new Set(LIVE_SYNTH_NAMES)
 /** User-owned synth props that mirror to the engine on assignment. */
 const userProps = new Set(USER_PROPS)
 
-/** Message shared by the unresolved-identifier warn and `ReferenceError`. */
+/**
+ * Message shared by the unresolved-identifier warn and `ReferenceError`.
+ * @param {string} name
+ * @returns {string}
+ * */
 const unresolvedMessage = name =>
   `[hydra-context] identifier '${name}' is undefined (scope, synth, and globals)`
 
 /** Per-scope names already warned about. */
 const warnedIdentifiers = new WeakMap()
 
-/** Default reporter for unresolved identifiers. */
+/**
+ * Default reporter for unresolved identifiers.
+ * @param {...any} args
+ * @returns {void}
+ * */
 const defaultWarn = (...args) => console.warn(...args)
 
 /** Per-scope names explicitly bound via `bindScope`/`bindLiveScope`. */
@@ -65,7 +73,7 @@ function warnOnce(scope, name, warn) {
 
 /**
  * Reads a synth property, binding methods to the synth.
- * @param {Object} synth
+ * @param {any} synth
  * @param {string} prop
  * @returns {{found: boolean, value: unknown}}
  * */
@@ -110,8 +118,8 @@ export function bindScope(scope, name, value) {
  * Defines a live getter binding; an assignment replaces it with a static value unless a `sink` is provided.
  * @param {Object} scope
  * @param {string} name
- * @param {Function} provider
- * @param {Function} [sink]
+ * @param {() => any} provider
+ * @param {(value: unknown) => void} [sink]
  * @returns {void}
  * */
 export function bindLiveScope(scope, name, provider, sink) {
@@ -132,7 +140,7 @@ export function bindLiveScope(scope, name, provider, sink) {
 
 /**
  * Deletes a binding from a scope.
- * @param {Object} scope
+ * @param {any} scope
  * @param {string} name
  * @returns {void}
  * */
@@ -143,11 +151,11 @@ export function unbindScope(scope, name) {
 
 /**
  * Proxies scope access to live synth values and globals.
- * @param {Object} synth
- * @param {Object} scope
+ * @param {any} synth
+ * @param {any} scope
  * @param {Object} [options]
  * @param {'warn'|'error'|'silent'|Function} [options.unresolved='warn'] Policy for identifiers missing from scope, synth, and globals: warn once, stay silent, throw a `ReferenceError`, or report through a custom function.
- * @returns {Proxy}
+ * @returns {Object}
  * */
 export function createScopeProxy(synth, scope, options = {}) {
   const unresolved = options.unresolved ?? 'warn'
@@ -159,7 +167,7 @@ export function createScopeProxy(synth, scope, options = {}) {
     get(target, prop) {
       if (typeof prop !== 'string') {
         if (prop in target) return target[prop]
-        return globalThis[prop]
+        return /** @type {any} */ (globalThis)[prop]
       }
       if (liveNames.has(prop) && !boundScopeNames.get(target)?.has(prop)) {
         const liveRead = readSynthProp(synth, prop)
@@ -178,7 +186,7 @@ export function createScopeProxy(synth, scope, options = {}) {
           warnOnce(target, prop, defaultWarn)
         }
       }
-      return fixGlobalThis(globalThis[prop])
+      return fixGlobalThis(/** @type {any} */ (globalThis)[prop])
     },
     set(target, prop, value) {
       target[prop] = value

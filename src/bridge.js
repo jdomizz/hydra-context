@@ -1,14 +1,20 @@
 import { publishHydraGlobals } from './globals.js'
 
 /**
+ * Serialized bridge coordinator — one engine at a time, FIFO waiters.
+ * @typedef {Object} Bridge
+ * @property {(hydra: Object, fn: Function) => Promise<unknown>} withBridge Runs `fn` under the temporary global bridge for `hydra`.
+ */
+
+/**
  * Creates a serialized global bridge coordinator — one engine at a time, FIFO waiters.
- * @returns {{withBridge: Function}}
+ * @returns {Bridge}
  * */
 export function createBridge() {
-  /** The engine that currently holds the bridge. */
+  /** The engine that currently holds the bridge. @type {any} */
   let owner = null
 
-  /** Waiters for the bridge, drained in FIFO order. */
+  /** Waiters for the bridge, drained in FIFO order. @type {any[]} */
   const waiters = []
 
   /**

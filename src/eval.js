@@ -3,7 +3,7 @@ import { createScopeProxy } from './scope.js'
 /**
  * Evaluates code in a `with`-scope against a synth.
  * @param {string} code
- * @param {Object} synth
+ * @param {any} synth
  * @param {Object} [scope]
  * @param {Object} [options] Forwarded to the scope proxy.
  * @returns {Promise<unknown>}

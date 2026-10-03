@@ -2,13 +2,13 @@ import { GLOBAL_BRIDGE, GLOBAL_EXCLUDED } from './names.js'
 
 /**
  * Publishes the engine surface on `globalThis`; returns a restore function. Prefer `withBridge` for serialized access.
- * @param {Object} hydra
+ * @param {any} hydra
  * @returns {Function}
  * */
 export function publishHydraGlobals(hydra) {
   const { hydra: hydraGlobal, hydraSynth: hydraSynthGlobal, synth: synthGlobal } = GLOBAL_BRIDGE
   const snapshot = new Map()
-  const win = globalThis
+  const win = /** @type {any} */ (globalThis)
   const keys = [
     ...Object.values(GLOBAL_BRIDGE),
     ...Object.keys(hydra.synth).filter(key => !GLOBAL_EXCLUDED.has(key)),
