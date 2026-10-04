@@ -1,6 +1,6 @@
 {
   "name": "hydra-context",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Isolated eval scopes for hydra-synth instances",
   "keywords": [
     "creative-coding",
@@ -58,13 +58,13 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "hydra-synth": "^1.4.0",
-    "oxc-standard": "^1.4.0",
-    "oxfmt": "^0.48.0",
-    "oxlint": "^1.85.0",
+    "oxc-standard": "^1.4.2",
+    "oxfmt": "^0.71.0",
+    "oxlint": "^1.86.0",
     "publint": "^0.3.25",
     "typescript": "^7.0.2",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   },
   "engines": {
     "node": ">=18"
