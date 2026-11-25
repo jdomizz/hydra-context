@@ -1,4 +1,34 @@
-import { GLOBAL_BRIDGE, GLOBAL_EXCLUDED } from './names.js'
+import { ENGINE_GLOBALS, GLOBAL_BRIDGE, GLOBAL_EXCLUDED } from './names.js'
+
+/**
+ * Captures the current values of some `globalThis` names.
+ * @param {Iterable<string>} names
+ * @returns {Map<string, { own: boolean, value: any }>}
+ * */
+function captureGlobals(names) {
+  const win = /** @type {any} */ (globalThis)
+  const snapshot = new Map()
+  for (const name of names) {
+    snapshot.set(name, {
+      own: Object.prototype.hasOwnProperty.call(win, name),
+      value: win[name],
+    })
+  }
+  return snapshot
+}
+
+/**
+ * Restores names captured by `captureGlobals`, deleting those that were absent.
+ * @param {Map<string, { own: boolean, value: any }>} snapshot
+ * @returns {void}
+ * */
+function restoreGlobals(snapshot) {
+  const win = /** @type {any} */ (globalThis)
+  for (const [name, entry] of snapshot) {
+    if (entry.own) win[name] = entry.value
+    else delete win[name]
+  }
+}
 
 /**
  * Publishes the engine surface on `globalThis`; returns a restore function. Prefer `withBridge` for serialized access.
@@ -7,18 +37,12 @@ import { GLOBAL_BRIDGE, GLOBAL_EXCLUDED } from './names.js'
  * */
 export function publishHydraGlobals(hydra) {
   const { hydra: hydraGlobal, hydraSynth: hydraSynthGlobal, synth: synthGlobal } = GLOBAL_BRIDGE
-  const snapshot = new Map()
   const win = /** @type {any} */ (globalThis)
   const keys = [
     ...Object.values(GLOBAL_BRIDGE),
     ...Object.keys(hydra.synth).filter(key => !GLOBAL_EXCLUDED.has(key)),
   ]
-  for (const key of keys) {
-    snapshot.set(key, {
-      own: Object.prototype.hasOwnProperty.call(win, key),
-      value: win[key],
-    })
-  }
+  const snapshot = captureGlobals(keys)
   for (const key of snapshot.keys()) {
     const value = hydra.synth[key]
     if (key === hydraGlobal || key === hydraSynthGlobal) {
@@ -31,10 +55,15 @@ export function publishHydraGlobals(hydra) {
       win[key] = value
     }
   }
-  return () => {
-    for (const [key, entry] of snapshot) {
-      if (entry.own) win[key] = entry.value
-      else delete win[key]
-    }
-  }
+  return () => restoreGlobals(snapshot)
+}
+
+/**
+ * Captures the engine-owned globals before a `makeGlobal` engine is constructed; returns a restore
+ * that writes back the previous values and deletes names the page did not own.
+ * @returns {Function}
+ * */
+export function snapshotEngineGlobals() {
+  const snapshot = captureGlobals(ENGINE_GLOBALS)
+  return () => restoreGlobals(snapshot)
 }

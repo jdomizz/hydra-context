@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { publishHydraGlobals } from './globals.js'
+import { publishHydraGlobals, snapshotEngineGlobals } from './globals.js'
 
 describe('publishHydraGlobals', () => {
   it('publishes and restores the hydra surface', () => {
@@ -33,5 +33,29 @@ describe('publishHydraGlobals', () => {
     restore()
     expect(globalThis.synth).toBe('original')
     delete globalThis.synth
+  })
+})
+
+describe('snapshotEngineGlobals', () => {
+  it('restores engine-written names and deletes the ones that were absent', () => {
+    globalThis.speed = 'host'
+    const restore = snapshotEngineGlobals()
+    globalThis.speed = 1
+    globalThis.loadScript = () => {}
+    globalThis.mouse = {}
+    restore()
+    expect(globalThis.speed).toBe('host')
+    expect(globalThis.loadScript).toBeUndefined()
+    expect(globalThis.mouse).toBeUndefined()
+    delete globalThis.speed
+  })
+
+  it('does not capture names outside the engine surface', () => {
+    globalThis.hostValue = 'keep'
+    const restore = snapshotEngineGlobals()
+    globalThis.hostValue = 'changed'
+    restore()
+    expect(globalThis.hostValue).toBe('changed')
+    delete globalThis.hostValue
   })
 })
