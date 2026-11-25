@@ -90,6 +90,54 @@ describe('HydraContext', () => {
     expect(synth.osc).toHaveBeenLastCalledWith(0.7)
   })
 
+  it('mirrors user props to globalThis on a global engine', async () => {
+    const synth = {
+      speed: 1,
+      bpm: 30,
+      update: () => 0,
+      afterUpdate: () => 0,
+      fps: 60,
+    }
+    const hydra = { synth, sandbox: { makeGlobal: true } }
+    const context = new HydraContext(hydra)
+
+    await context.eval('speed = 2; bpm = 60; update = () => 42; afterUpdate = () => 43; fps = 30')
+
+    expect(synth.speed).toBe(2)
+    expect(synth.bpm).toBe(60)
+    expect(synth.update()).toBe(42)
+    expect(synth.afterUpdate()).toBe(43)
+    expect(synth.fps).toBe(30)
+    expect(globalThis.speed).toBe(2)
+    expect(globalThis.bpm).toBe(60)
+    expect(globalThis.update).toBe(synth.update)
+    expect(globalThis.afterUpdate).toBe(synth.afterUpdate)
+    expect(globalThis.fps).toBe(30)
+
+    // hydra-synth's sandbox copies globalThis back into the synth every tick
+    synth.speed = globalThis.speed
+    synth.update = globalThis.update
+    expect(synth.speed).toBe(2)
+    expect(synth.update()).toBe(42)
+
+    delete globalThis.speed
+    delete globalThis.bpm
+    delete globalThis.update
+    delete globalThis.afterUpdate
+    delete globalThis.fps
+  })
+
+  it('leaves globalThis alone on an isolated engine', async () => {
+    const synth = { speed: 1 }
+    const context = new HydraContext({ synth })
+
+    await context.eval('speed = 2; update = () => 42')
+
+    expect(synth.speed).toBe(2)
+    expect(globalThis.speed).toBeUndefined()
+    expect(globalThis.update).toBeUndefined()
+  })
+
   it('binds editor globals into the scope by default', async () => {
     const hydra = { synth: {} }
     const context = new HydraContext(hydra)

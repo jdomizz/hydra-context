@@ -178,6 +178,23 @@ describe('createScopeProxy', () => {
     expect(synth.x).toBeUndefined()
   })
 
+  it('mirrors user props to globalThis when asked', () => {
+    const synth = { speed: 1 }
+    const proxy = makeProxy(synth, Object.create(null), { mirrorUserPropsToGlobal: true })
+    proxy.speed = 2
+    expect(synth.speed).toBe(2)
+    expect(globalThis.speed).toBe(2)
+    delete globalThis.speed
+  })
+
+  it('leaves globalThis alone by default', () => {
+    const synth = { speed: 1 }
+    const proxy = makeProxy(synth, Object.create(null))
+    proxy.speed = 2
+    expect(synth.speed).toBe(2)
+    expect(globalThis.speed).toBeUndefined()
+  })
+
   it('warns once per scope', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const proxyA = makeProxy({})

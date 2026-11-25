@@ -155,10 +155,12 @@ export function unbindScope(scope, name) {
  * @param {any} scope
  * @param {Object} [options]
  * @param {'warn'|'error'|'silent'|Function} [options.unresolved='warn'] Policy for identifiers missing from scope, synth, and globals: warn once, stay silent, throw a `ReferenceError`, or report through a custom function.
+ * @param {boolean} [options.mirrorUserPropsToGlobal=false] Whether user prop assignments also write to `globalThis`, as a global engine expects.
  * @returns {Object}
  * */
 export function createScopeProxy(synth, scope, options = {}) {
   const unresolved = options.unresolved ?? 'warn'
+  const mirrorUserPropsToGlobal = options.mirrorUserPropsToGlobal ?? false
   const synthGlobal = GLOBAL_BRIDGE.synth
   return new Proxy(scope, {
     has() {
@@ -192,6 +194,10 @@ export function createScopeProxy(synth, scope, options = {}) {
       target[prop] = value
       if (typeof prop === 'string' && userProps.has(prop) && synth) {
         synth[prop] = value
+        if (mirrorUserPropsToGlobal) {
+          const globals = /** @type {any} */ (globalThis)
+          globals[prop] = value
+        }
       }
       return true
     },

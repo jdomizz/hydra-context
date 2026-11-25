@@ -12,6 +12,8 @@ export class HydraContext {
   #scope
   #unresolved
   #bridge
+  /** Whether the attached engine's global sandbox reads user props from `globalThis`. */
+  #mirrorUserPropsToGlobal = false
 
   /**
    * @param {Object} [hydra] The hydra-synth engine to attach.
@@ -59,6 +61,7 @@ export class HydraContext {
   attach(hydra) {
     this.#hydra = hydra
     this.#synth = hydra.synth
+    this.#mirrorUserPropsToGlobal = hydra?.sandbox?.makeGlobal === true
     this.bind(GLOBAL_BRIDGE.hydra, hydra)
     this.bind(GLOBAL_BRIDGE.hydraSynth, hydra)
     return this
@@ -70,7 +73,10 @@ export class HydraContext {
    * @returns {Promise<unknown>}
    * */
   eval(code) {
-    return hydraEval(code, this.#synth, this.#scope, { unresolved: this.#unresolved })
+    return hydraEval(code, this.#synth, this.#scope, {
+      unresolved: this.#unresolved,
+      mirrorUserPropsToGlobal: this.#mirrorUserPropsToGlobal,
+    })
   }
 
   /**

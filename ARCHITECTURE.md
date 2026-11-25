@@ -75,7 +75,10 @@ async function () { with(scopeProxy) { code } }()
   stays in the scope, and why unknown identifiers warn once and resolve to
   `undefined` instead of throwing.
 - `set()` writes the scope and mirrors user-owned props (`speed`, `bpm`,
-  `update`, `afterUpdate`, `fps`) to the synth.
+  `update`, `afterUpdate`, `fps`) to the synth. When the attached engine runs
+  in global mode (`sandbox.makeGlobal`), the same props are also written to
+  `globalThis`, because the engine copies them back from there on every tick —
+  without the mirror the next tick would revert the sketch's assignment.
 - Synth functions are read bound to the synth; global functions are wrapped so
   they keep `globalThis` as their receiver (`setTimeout`, `fetch`, …).
 

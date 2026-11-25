@@ -212,8 +212,10 @@ undeclaredName` still works as in the editor). For editor strictness set
 **DSL for the sketch creator** — the registration choices an extension author
 already makes in the editor, applied per instance:
 
-- **`setFunction`, `update`, `afterUpdate` are per-instance** — two contexts can
-  define the same name differently without `window` collisions.
+- **`setFunction`, `update`, `afterUpdate` are per-instance with an isolated
+  engine** — two contexts can define the same name differently without `window`
+  collisions. On a global engine `update` and `afterUpdate` mirror to
+  `globalThis` so the engine's per-tick read-back keeps them.
 - **`time` / `width` / `height` are read per access** — fresher than the
   editor's per-frame `window.time`.
 
