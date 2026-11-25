@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-11-25
+
+### Changed
+
+- Bumped devDependencies: `oxfmt` 0.71.0 → 0.80.0, `oxlint` 1.86.0 → 1.95.0, `vite` 8.3.2 → 8.3.8, `vitest` 5.0.3 → 5.1.1.
+
+### Fixed
+
+- Demo loads `lib-pattern` from `metagrowing.org` through a CORS-free `<script>` loader, replacing the rate-limited `cdn.statically.io` URL (HTTP 429).
+- On a global engine (`sandbox.makeGlobal`), assignments to the user props `speed`, `bpm`, `update`, `afterUpdate`, and `fps` now also reach `globalThis`, so the engine's per-tick read-back cannot revert them. Isolated engines still leave `globalThis` untouched.
+
 ## [0.2.1] - 2026-10-04
 
 ### Changed
@@ -44,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `unresolved` — policy for unknown identifiers: warn once per scope and name, stay `silent`, throw a `ReferenceError` (`'error'`), or report through a custom function.
 - Demo (`pnpm dev`) — two isolated instances with two-way sliders, per-instance pointers, a host-owned extension loader, and a watch on the editor globals staying `undefined`.
 
+[0.2.2]: https://github.com/jdomizz/hydra-context/releases/tag/v0.2.2
 [0.2.1]: https://github.com/jdomizz/hydra-context/releases/tag/v0.2.1
 [0.2.0]: https://github.com/jdomizz/hydra-context/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jdomizz/hydra-context/releases/tag/v0.1.0
