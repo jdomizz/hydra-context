@@ -277,13 +277,14 @@ Importing `hydra-synth` also sets `window.Meyda` — a module side effect of its
 `bind`, `bindLive`, and `unbind` are chainable. `withBridge` throws
 synchronously when no engine is attached.
 
-The package root exports only three names — the source modules are
+The package root exports only four names — the source modules are
 implementation details, not public subpaths:
 
 | Export                       | Description                                                                                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `HydraContext`               | The class.                                                                                                                                  |
 | `publishHydraGlobals(hydra)` | Publish the engine surface on `globalThis`; returns a restore function. Prefer `withBridge`; for hosts that must hold a persistent surface. |
+| `snapshotEngineGlobals()`    | Capture the engine-owned globals before a `makeGlobal` engine is built; returns a restore that writes back previous values and deletes absent names. |
 | `userCodeLine(error, code)`  | Map a V8/Chromium error stack back to a 1-based line in the submitted code; `undefined` when unmappable.                                    |
 
 ### Options

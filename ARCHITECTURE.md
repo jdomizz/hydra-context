@@ -23,7 +23,7 @@ see the README's
 ## Big picture
 
 ```
-index.js ─── the public root: HydraContext · userCodeLine · publishHydraGlobals
+index.js ─── the public root: HydraContext · userCodeLine · publishHydraGlobals · snapshotEngineGlobals
    │
    ▼
 src/context.js ── HydraContext (the facade)
@@ -44,12 +44,12 @@ back, and every module that needs the reserved-name sets imports them from
 
 | File             | Responsibility                                                                    |
 | ---------------- | --------------------------------------------------------------------------------- |
-| `index.js`       | Public root; exports `HydraContext`, `userCodeLine`, `publishHydraGlobals`.       |
+| `index.js`       | Public root; exports `HydraContext`, `userCodeLine`, `publishHydraGlobals`, `snapshotEngineGlobals`. |
 | `src/context.js` | `HydraContext` — the facade: engine attachment, scope ownership, public methods.  |
 | `src/eval.js`    | `hydraEval` — the async evaluator; `userCodeLine` — V8 stack mapping.             |
 | `src/scope.js`   | The scope `Proxy` and the binding primitives (`bind`/`bindLive`/`unbind`).        |
 | `src/bridge.js`  | `createBridge` — the serialized bridge coordinator; `sharedBridge` — the default. |
-| `src/globals.js` | `publishHydraGlobals` — the engine-surface publish/restore primitive.             |
+| `src/globals.js` | `publishHydraGlobals` / `snapshotEngineGlobals` — the engine-surface publish/restore primitives. |
 | `src/names.js`   | The reserved-name sets (bridge names, live/user props, global exclusions).        |
 
 Each behavior module has a sibling `*.spec.js` covering it (`names.js` is pure
@@ -108,6 +108,13 @@ keeps `window` clean after the load.
 `publishHydraGlobals` is the raw publish/restore pair beneath the coordinator,
 exported for hosts that must hold a persistent surface (e.g. `hydra-element`'s
 `global` mode) — manual use owns serialization itself.
+
+`snapshotEngineGlobals` covers the other side of the same surface: the names a
+`makeGlobal` engine writes that `publishHydraGlobals` deliberately does not
+publish (`speed`, `bpm`, `update`, `afterUpdate`, `fps`, `time`, `width`,
+`height`, `mouse`, `stats`, plus hydra-synth's `window.loadScript`). Call it
+**before** constructing the engine and run its restore on teardown so rebuilds
+do not leave stale globals behind.
 
 Extension loading is composed by the host on top of `withBridge` + `eval`
 (fetch the text, evaluate it under the bridge, or fall back to a `<script>` tag
