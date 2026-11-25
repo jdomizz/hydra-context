@@ -48,8 +48,8 @@ most convenient — each element wraps its own engine, no extra wiring.
 
 ## Demo
 
-Want to poke around without setting up a project? Open the CodePen
-[example](https://codepen.io/editor/jdomizz/pen/01a0e33d-ffb3-72ee-b8dd-213dbcf6d823)
+Want to poke around without setting up a project? Open the [CodePen
+demo](https://codepen.io/editor/jdomizz/pen/01a0e33d-ffb3-72ee-b8dd-213dbcf6d823)
 for a ready-to-edit playground and quick tests.
 
 The demo mounts two engines side by side, feeds each a two-way slider and its
