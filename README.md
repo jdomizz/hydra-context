@@ -154,11 +154,42 @@ ctx.bindLive(
 ## Load extensions
 
 Loading is host-owned — fetch policy, CORS, and fallbacks stay with the host —
-because the package is DOM-free: a `<script>` tag fallback needs a document.
-The primitives are `withBridge` (run code under the engine surface) and `eval`:
+because the package is DOM-free: a `<script>` tag needs a document. The
+primitives are `withBridge` (run code under the engine surface) and `eval`.
+Classic extensions read `_hydra`/`hydraSynth` from `window`, so the most portable
+loader injects a `<script>` while the bridge is held — no CORS required:
 
 ```js
 // host binds its own loader into the scope
+ctx.bind('loadScript', url =>
+  ctx.withBridge(
+    () =>
+      new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.onload = () => {
+          script.remove()
+          resolve()
+        }
+        script.onerror = () => {
+          script.remove()
+          reject(new Error(`loadScript failed: ${url}`))
+        }
+        document.head.append(script)
+      })
+  )
+)
+
+await ctx.eval(`
+  await loadScript('https://metagrowing.org/extra-shaders-for-hydra/lib-pattern.js')
+  spiral().diff(concentric()).out()
+`)
+```
+
+When the extension is served from a CORS-enabled host, the code can stay in
+`eval` instead:
+
+```js
 ctx.bind('loadScript', async url => {
   await ctx.withBridge(async () => {
     const res = await fetch(url)
@@ -166,11 +197,6 @@ ctx.bind('loadScript', async url => {
     await ctx.eval(await res.text())
   })
 })
-
-await ctx.eval(`
-  await loadScript('https://cdn.statically.io/gl/metagrowing/extra-shaders-for-hydra@main/lib/lib-pattern.js')
-  spiral().diff(concentric()).out()
-`)
 ```
 
 Classic extensions self-register through `window` (`_hydra`, `hydraSynth`,

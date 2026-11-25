@@ -162,17 +162,29 @@
       }
 
       /**
-       * Host-owned extension loader: fetch + eval under the temporary bridge, so
-       * the extension sees `_hydra`/`hydraSynth`/`synth` while it registers.
+       * Host-owned extension loader: inject a classic <script> while the bridge is
+       * held, so the extension sees `_hydra`/`hydraSynth`/`synth` as it registers.
+       * Unlike fetch + eval, a script tag does not need CORS.
        */
       function bindLoadScript(context) {
-        context.bind('loadScript', async url => {
-          await context.withBridge(async () => {
-            const res = await fetch(url)
-            if (!res.ok) return
-            await context.eval(await res.text())
-          })
-        })
+        context.bind('loadScript', url =>
+          context.withBridge(
+            () =>
+              new Promise((resolve, reject) => {
+                const script = document.createElement('script')
+                script.src = url
+                script.onload = () => {
+                  script.remove()
+                  resolve()
+                }
+                script.onerror = () => {
+                  script.remove()
+                  reject(new Error(`loadScript failed: ${url}`))
+                }
+                document.head.append(script)
+              })
+          )
+        )
       }
 
       const a = mount('#canvas-a')
@@ -193,7 +205,7 @@
       bindLoadScript(a.ctx)
 
       await a.ctx.eval(`
-        await loadScript('https://cdn.statically.io/gl/metagrowing/extra-shaders-for-hydra@main/lib/lib-pattern.js')
+        await loadScript('https://metagrowing.org/extra-shaders-for-hydra/lib-pattern.js')
         update = () => { if (animate) { scale = (Math.sin(time * 0.3) + 1) / 2 } }
         spiral(() => scale * 3, 5, 0.3)
           .diff(concentric(() => scale * 120))
