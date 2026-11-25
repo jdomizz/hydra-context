@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-11-25
+
+### Added
+
+- `snapshotEngineGlobals()` named export — capture the `globalThis` names a `makeGlobal` engine writes outside `publishHydraGlobals` (`speed`, `bpm`, `update`, `afterUpdate`, `fps`, `time`, `width`, `height`, `mouse`, `stats`, `loadScript`) before construction, and get a restore that writes back previous values and deletes absent names. Lets hosts tear down a global engine without leaving stale globals behind.
+
 ## [0.2.2] - 2026-11-25
 
 ### Changed
@@ -55,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `unresolved` — policy for unknown identifiers: warn once per scope and name, stay `silent`, throw a `ReferenceError` (`'error'`), or report through a custom function.
 - Demo (`pnpm dev`) — two isolated instances with two-way sliders, per-instance pointers, a host-owned extension loader, and a watch on the editor globals staying `undefined`.
 
+[0.2.3]: https://github.com/jdomizz/hydra-context/releases/tag/v0.2.3
 [0.2.2]: https://github.com/jdomizz/hydra-context/releases/tag/v0.2.2
 [0.2.1]: https://github.com/jdomizz/hydra-context/releases/tag/v0.2.1
 [0.2.0]: https://github.com/jdomizz/hydra-context/releases/tag/v0.2.0
